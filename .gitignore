@@ -1,0 +1,24 @@
+
+# Django stuff:
+db.sqlite3
+*.log.*
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+*.pyc
+# Environ Variables
+*.env
+# Files
+*.csv
+*.xlsx
+*.rar
+
+migrations/
