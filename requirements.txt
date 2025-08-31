@@ -1,0 +1,13 @@
+Django>=3.2
+psycopg2-binary>=2.9
+djangorestframework
+django-oauth-toolkit
+requests
+openpyxl
+django-environ
+ipython
+pandas
+python-dotenv
+clickhouse-driver
+lz4
+clickhouse-cityhash

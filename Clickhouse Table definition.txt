@@ -1,0 +1,15 @@
+CREATE TABLE nwg.mt_sla
+(
+    `time` DateTime,
+    `technology` String,
+    `network` String,
+    `layer` String,
+    `element` String,
+    `created_at` DateTime DEFAULT now(),
+    `data` String,
+    `type` String
+)
+ENGINE = ReplacingMergeTree
+PARTITION BY toYYYYMM(time)
+ORDER BY (layer, time, technology, network, element)
+SETTINGS index_granularity = 8192
