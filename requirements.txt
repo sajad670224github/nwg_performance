@@ -11,3 +11,4 @@ python-dotenv
 clickhouse-driver
 lz4
 clickhouse-cityhash
+drf_yasg
