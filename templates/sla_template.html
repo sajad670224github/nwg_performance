@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Type API Selection</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            height: 90vh;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
+
+        .left-panel {
+            width: 25%;
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 1px solid #ddd;
+            overflow-y: auto;
+        }
+
+        .chart-area {
+            width: 55%;
+            padding: 20px;
+            position: relative;
+        }
+
+        .selection-panel {
+            width: 20%;
+            background: #f8f9fa;
+            padding: 20px;
+            border-left: 1px solid #ddd;
+            overflow-y: auto;
+        }
+
+        .date-selectors {
+            margin-bottom: 25px;
+        }
+
+        .date-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="date"]:focus {
+            border-color: #4b6cb7;
+            outline: none;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .fetch-btn {
+            background-color: #4b6cb7;
+            color: white;
+        }
+
+        .fetch-btn:hover {
+            background-color: #3a559d;
+        }
+
+        .export-btn {
+            background-color: #f5f5f5;
+            color: #2c3e50;
+            border: 1px solid #ddd;
+        }
+
+        .export-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .api-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .api-section {
+            margin-bottom: 15px;
+
+        }
+
+        .api-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dropdown-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .dropdown-header {
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .dropdown-list {
+            position: absolute;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            background-color: white;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .dropdown-item input {
+            margin-right: 8px;
+        }
+
+        .selected-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .selected-item {
+            background-color: #4b6cb7;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            align-items: center;
+            font-size: 12px;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .selected-item button {
+            background: none;
+            border: none;
+            color: white;
+            margin-left: 6px;
+            padding: 0;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Chart styling */
+        .chart-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            height: 100%;
+            position: relative;
+        }
+
+        #timeSeriesChart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .no-data {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        /* Selection panel styling */
+        .selector-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f4f8;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #4b6cb7;
+        }
+
+        .legend-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            padding: 4px 8px;
+            background: #f0f4f8;
+            border-radius: 4px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .left-panel, .chart-area, .selection-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="date-selectors">
+                <div class="date-group">
+                    <label for="start-date">Start Date:</label>
+                    <input type="date" id="start-date">
+                </div>
+                <div class="date-group">
+                    <label for="end-date">End Date:</label>
+                    <input type="date" id="end-date">
+                </div>
+            </div>
+
+            <div class="api-sections">
+                <!-- Network Section -->
+                <div class="api-section network">
+                    <div class="api-title">
+                        <span>Network</span>
+                    </div>
+
+                    <div class="dropdown-container">
+                        <div class="dropdown-header" id="network-dropdown-header">
+                            <span>Select network items</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="dropdown-list" id="network-dropdown-list">
+                            <!-- Network items will be populated here -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Layer Section -->
+                <div class="api-section layer">
+                    <div class="api-title">
+                        <span>Layer</span>
+                    </div>
+
+                    <div class="dropdown-container">
+                        <div class="dropdown-header" id="layer-dropdown-header">
+                            <span>Select layer items</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="dropdown-list" id="layer-dropdown-list">
+                            <!-- Layer items will be populated here -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Technology Section -->
+                <div class="api-section technology">
+                    <div class="api-title">
+                        <span>Technology</span>
+                    </div>
+
+                    <div class="dropdown-container">
+                        <div class="dropdown-header" id="technology-dropdown-header">
+                            <span>Select technology items</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="dropdown-list" id="technology-dropdown-list">
+                            <!-- Technology items will be populated here -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Type Section -->
+                <div class="api-section type">
+                    <div class="api-title">
+                        <span>Type</span>
+                    </div>
+
+                    <div class="dropdown-container">
+                        <div class="dropdown-header" id="type-dropdown-header">
+                            <span>Select type items</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="dropdown-list" id="type-dropdown-list">
+                            <!-- Type items will be populated here -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- kpi Section -->
+                <div class="api-section kpi">
+                    <div class="api-title">
+                        <span>kpi</span>
+                    </div>
+
+                    <div class="dropdown-container">
+                        <div class="dropdown-header" id="kpi-dropdown-header">
+                            <span>Select kpi items</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="dropdown-list" id="kpi-dropdown-list">
+                            <!-- kpi items will be populated here -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- element Section -->
+                <div class="api-section element">
+                    <div class="api-title">
+                        <span>elements</span>
+                    </div>
+
+                    <div class="dropdown-container">
+                        <div class="dropdown-header" id="element-dropdown-header">
+                            <span>Select element items</span>
+                            <span>▼</span>
+                        </div>
+                        <div class="dropdown-list" id="element-dropdown-list">
+                            <!-- element items will be populated here -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="button-container">
+                    <button id="fetch-btn" class="fetch-btn">fetch</button>
+                    <button id="export-btn" class="export-btn">Export CSV</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-area">
+            <div class="chart-container">
+                <canvas id="timeSeriesChart"></canvas>
+                <div class="no-data" id="no-data-message">No data available. Fetch data from API.</div>
+            </div>
+            <div class="legend-container" id="chart-legend"></div>
+        </div>
+
+        <div class="selection-panel">
+            <div class="section-title">Select KPIs</div>
+            <div class="selector-group" id="kpi-selector">
+                <div class="checkbox-item">
+                    <span class="loading"></span> Load data first...
+                </div>
+            </div>
+
+            <div class="section-title">Select Elements</div>
+            <div class="selector-group" id="element-selector">
+                <div class="checkbox-item">
+                    <span class="loading"></span> Load data first...
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Debounce function to limit API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Chart instance
+        let timeSeriesChartInstance = null;
+        // Store the current active dropdown type
+        let activeDropdownType = null;
+
+        $(document).ready(function() {
+            // Define the types we need to handle
+            const types = ['network', 'layer', 'technology', 'type', 'kpi', 'element'];
+            // create selected item
+            let index_type = 0
+            let selectedItems = {}
+            types.forEach(type => {
+                selectedItems[type] = []
+            });
+            // Set default date values to current date and 30 days prior
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            // Format dates as YYYY-MM-DD for input fields
+            const formatDate = function(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            $('#start-date').val(formatDate(thirtyDaysAgo));
+            $('#end-date').val(formatDate(today));
+
+            // MODIFIED: Close all dropdowns when opening a new one
+            types.forEach(type => {
+                $(`#${type}-dropdown-header`).on('click', function(e) {
+                    e.stopPropagation(); // Prevent event from bubbling up
+
+                    // Close all other dropdowns first
+                    types.forEach(otherType => {
+                        if (otherType !== type) {
+                            $(`#${otherType}-dropdown-list`).slideUp();
+                        }
+                    });
+                    if (activeDropdownType) {
+                        typeApiCall(activeDropdownType);
+                        activeDropdownType = null;
+                    }
+                    // Toggle the clicked dropdown
+                    $(`#${type}-dropdown-list`).slideToggle();
+                });
+            });
+
+            // Validate dates and fetch from API when either date input changes
+            $('#start-date, #end-date').on('change', function() {
+                if (validateDates()) {
+                    // Only fetch from API if dates are valid
+                    // Clear selected items for all types
+                    types.forEach(type => {
+                        selectedItems[type] = []
+                        $(`#${type}-dropdown-list input:checked`).prop('checked', false);
+                    });
+                    fetchFromAPI('network');
+                }
+            });
+
+            // Use debounced version for API calls to avoid too many requests
+            const debouncedFetch = debounce(function() {
+                if (validateDates()) {
+                    types.forEach(type => {
+                        fetchFromAPI(type);
+                    });
+                }
+            }, 500);
+
+            // Also call API on keyup for immediate feedback
+            $('#start-date, #end-date').on('keyup', function() {
+                debouncedFetch();
+            });
+
+            // Date validation function
+            function validateDates() {
+                const startDate = new Date($('#start-date').val());
+                const endDate = new Date($('#end-date').val());
+
+                if (startDate > endDate) {
+                    const thirtyDaysBeforeEnd = new Date(endDate);
+                    thirtyDaysBeforeEnd.setDate(endDate.getDate() - 30);
+                    $('#start-date').val(formatDate(thirtyDaysBeforeEnd));
+                    alert("The Start date was greater than the End date! \nThe Start date is changed to thirty days before End date.")
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+            // Function to fetch data from API for a specific type
+            function fetchFromAPI(type) {
+                const startDate = $('#start-date').val();
+                const endDate = $('#end-date').val();
+
+                // Prepare the payload
+                const technology_val = (selectedItems['technology'].length !== 0) ? String(selectedItems['technology']) : null
+                const type_val = (selectedItems['type'].length !== 0) ? String(selectedItems['type']) : null
+                const layer_val = (selectedItems['layer'].length !== 0) ? String(selectedItems['layer']) : null
+                const network_val = (selectedItems['network'].length !== 0) ? String(selectedItems['network']) : null
+
+                const variables = {
+                    technology: technology_val,
+                    type: type_val,
+                    layer: layer_val,
+                    network: network_val,
+                };
+
+                const layer_list = ["network", "layer", "technology", "type"];
+                let payload = {'start_date': startDate, 'end_date': endDate};
+
+                for (const item of layer_list) {
+                    if (item === type) {
+                        break;
+                    }
+                    payload[item] = variables[item];
+                }
+
+                // Get CSRF token
+                const csrftoken = getCookie('csrftoken');
+
+                // Make POST request to your API
+                $.ajax({
+                    url: `http://localhost:8005/sla/sla_params/${type}/`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    data: JSON.stringify(payload),
+                    success: function(response) {
+                        // Extract just the values from the response object
+                        const values = Object.values(response);
+
+                        // Populate the dropdown with API results
+                        populateDropdown(type, values);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("API Error:", error, xhr);
+                    }
+                });
+            }
+
+            // Function to fetch KPI data from API
+            function fetchKpiFromAPI(output) {
+                const startDate = $('#start-date').val();
+                const endDate = $('#end-date').val();
+
+                // Prepare the payload
+                const technology_val = (selectedItems['technology'].length !== 0) ? String(selectedItems['technology']) : null
+                const type_val = (selectedItems['type'].length !== 0) ? String(selectedItems['type']) : null
+                const layer_val = (selectedItems['layer'].length !== 0) ? String(selectedItems['layer']) : null
+                const network_val = (selectedItems['network'].length !== 0) ? String(selectedItems['network']) : null
+                const kpi_val = (selectedItems['kpi'].length !== 0) ? String(selectedItems['kpi']) : null
+                const element_val = (selectedItems['element'].length !== 0) ? String(selectedItems['element']) : null
+
+
+                const payload = {
+                    'start_date': startDate,
+                    'end_date': endDate,
+                    'technology': technology_val,
+                    'type': type_val,
+                    'layer': layer_val,
+                    'network': network_val,
+                    'kpis': kpi_val,
+                    'elements': element_val,
+                    'output': output
+                };
+
+                // Get CSRF token
+                const csrftoken = getCookie('csrftoken');
+
+                // Make POST request to your API
+                $.ajax({
+                    url: `http://localhost:8005/sla/sla_kpi_data/`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    data: JSON.stringify(payload),
+                    success: function(response) {
+                        if (output === 'csv') {
+                            processApiCsvResponse(response)
+                        } else {
+                            processApiResponse(response);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("KPI API Error:", error, xhr);
+                    }
+                });
+            }
+
+            // Process API response and update UI
+            function processApiResponse(response) {
+                // Store the API data
+                window.apiData = response;
+
+                // Update UI with dynamic KPIs and elements
+                renderKpiSelector();
+                renderElementSelector();
+
+                // Update chart with all data
+                updateChart();
+            }
+
+            // Update chart when the user click on kpi or elements
+            $('#kpi-selector, #element-selector').on('click', function() {
+                updateChart();
+            });
+
+            // Render KPI selector based on API response
+            function renderKpiSelector() {
+                const kpiSelector = $('#kpi-selector');
+                kpiSelector.empty();
+
+                if (!window.apiData || !window.apiData.indicators || window.apiData.indicators.length === 0) {
+                    kpiSelector.html('<div class="checkbox-item">No KPIs available</div>');
+                    return;
+                }
+
+                window.apiData.indicators.forEach(kpi => {
+                    const kpiId = kpi.toLowerCase().replace('_', '-') + '-checkbox';
+                    const kpiLabel = kpi.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                    const checkboxItem = $(
+                        `<div class="checkbox-item">
+                            <input type="checkbox" id="${kpiId}" checked>
+                            <label for="${kpiId}">${kpiLabel}</label>
+                        </div>`
+                    );
+
+                    kpiSelector.append(checkboxItem);
+                });
+            }
+
+            // Render element selector based on API response
+            function renderElementSelector() {
+                const elementSelector = $('#element-selector');
+                elementSelector.empty();
+
+                if (!window.apiData || !window.apiData.values || window.apiData.values.length === 0) {
+                    elementSelector.html('<div class="checkbox-item">No elements available</div>');
+                    return;
+                }
+
+                window.apiData.values.forEach(item => {
+                    const element = item.element;
+                    const elementId = element.toLowerCase() + '-checkbox';
+
+                    const checkboxItem = $(
+                        `<div class="checkbox-item">
+                            <input type="checkbox" id="${elementId}" checked>
+                            <label for="${elementId}">${element}</label>
+                        </div>`
+                    );
+
+                    elementSelector.append(checkboxItem);
+                });
+            }
+
+            // Get selected KPIs
+            function getSelectedKpis() {
+                const selectedKpis = [];
+                if (!window.apiData || !window.apiData.indicators) return selectedKpis;
+
+                window.apiData.indicators.forEach(kpi => {
+                    const kpiId = kpi.toLowerCase().replace('_', '-') + '-checkbox';
+                    if ($('#' + kpiId).is(':checked')) {
+                        selectedKpis.push(kpi);
+                    }
+                });
+
+                return selectedKpis;
+            }
+
+            // Get selected elements
+            function getSelectedElements() {
+                const selectedElements = [];
+                if (!window.apiData || !window.apiData.values) return selectedElements;
+
+                window.apiData.values.forEach(item => {
+                    const elementId = item.element.toLowerCase() + '-checkbox';
+                    if ($('#' + elementId).is(':checked')) {
+                        selectedElements.push(item.element);
+                    }
+                });
+
+                return selectedElements;
+            }
+
+
+            // Function to populate the dropdown with API results for a specific type
+            function populateDropdown(type, items) {
+                const dropdownList = $(`#${type}-dropdown-list`);
+                dropdownList.empty();
+
+                // Check if items is an array
+                if (!Array.isArray(items)) {
+                    console.error('API response is not an array:', items);
+                    return;
+                }
+
+                if (items.length === 0) {
+                    dropdownList.append('<div class="dropdown-item">No items found</div>');
+                    return;
+                }
+
+                items.forEach(function(item, index) {
+                    const dropdownItem = $('<div class="dropdown-item"></div>');
+                    const checkbox = $(`<input type="checkbox" id="${type}-item-${index}" value="${item}">`);
+                    const label = $(`<label for="${type}-item-${index}">${item}</label>`);
+
+                    // Add change event to checkbox
+                    checkbox.on('change', function() {
+                        const value = $(this).val()
+                        if (this.checked) {
+                            selectedItems[type].push(value);
+                        } else {
+                            index_type = selectedItems[type].indexOf(value);
+                            if (index_type !== -1) {
+                                selectedItems[type].splice(index_type, 1);
+                            }
+                        }
+                        activeDropdownType = type
+                    });
+                    dropdownItem.append(checkbox);
+                    dropdownItem.append(label);
+                    dropdownList.append(dropdownItem);
+                });
+            }
+
+
+            // Function to update dropdown header text based on selections
+            function updateDropdownHeader(type) {
+                const dropdownHeader = $(`#${type}-dropdown-header span:first`);
+
+                if (selectedItems[type].length === 0) {
+                    // No items selected, show default message
+                    dropdownHeader.text(`Select ${type} items`);
+                } else {
+                    // Create summary text for selected items
+                    let selectedText = '';
+                    selectedItems[type].forEach(sub_type => {
+                        if (selectedText === '') {
+                            selectedText = sub_type;
+                        } else {
+                            selectedText += ', ' + sub_type;
+                        }
+                    });
+                    // Truncate if too long
+                    if (selectedText.length > 50) {
+                        selectedText = selectedText.substring(0, 47) + '...';
+                    }
+
+                    dropdownHeader.text(selectedText);
+                }
+            }
+            // Initialize dropdown headers
+            types.forEach(type => {
+                updateDropdownHeader(type);
+            });
+            // remove data for lower layers and call api for next layer
+            function typeApiCall(type) {
+                clearTimeout(window.typeApiCallTimeout);
+
+                window.typeApiCallTimeout = setTimeout(function() {
+                    const types = ['network', 'layer', 'technology', 'type', 'kpi', 'element'];
+                    let is_layer = false;
+                    let fetch_data = true;
+
+                    for (const type_i of types) {
+                        if (type_i === type) {
+                            is_layer = true;
+                        }
+                        if (is_layer && type_i !== type) {
+                            selectedItems[type_i] = []
+                            updateDropdownHeader(type_i)
+                            $(`#${type_i}-dropdown-list input:checked`).prop('checked', false);
+                            if (fetch_data) {
+                                fetchFromAPI(type_i);
+                                fetch_data = false;
+                            }
+                        }
+                    }
+                   // update the header for selected items
+                   updateDropdownHeader(type)
+                }, 100)
+            }
+
+            // Initialize the chart
+            function initChart() {
+                const ctx = document.getElementById('timeSeriesChart').getContext('2d');
+
+                timeSeriesChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: []
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    tooltipFormat: 'yyyy-MM-dd'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 10,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // generate color function
+            function generateRandomColor() {
+                const r = Math.floor(Math.random() * 256);
+                const g = Math.floor(Math.random() * 256);
+                const b = Math.floor(Math.random() * 256);
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+
+            // Update chart based on selections
+            function updateChart() {
+                if (!window.apiData) {
+                    $('#no-data-message').show();
+                    return;
+                }
+
+                const selectedKpis = getSelectedKpis();
+                const selectedElements = getSelectedElements();
+
+                // Check if we have data to display
+                const hasData = selectedKpis.length > 0 && selectedElements.length > 0;
+
+                $('#no-data-message').toggle(!hasData);
+
+                if (!hasData) {
+                    timeSeriesChartInstance.data.datasets = [];
+                    timeSeriesChartInstance.update();
+                    return;
+                }
+
+                // constant color
+                const constantColors = [
+                    "#FF0000", "#0000FF", "#00FF00", "#FFFF00", "#FFA500",
+                    "#00FFFF", "#FF00FF", "#FFC0CB", "#808080", "#000000"
+                ];
+
+                // Colors for different Elements - KPIs
+                let colorIndex = 0;
+                let kpiColors = {};
+
+                selectedElements.forEach(element => {
+                    selectedKpis.forEach(kpi => {
+                        const key = `${element} - ${kpi}`;
+                        kpiColors[key] = colorIndex < 10 ? constantColors[colorIndex] : generateRandomColor();
+                        colorIndex++;
+                    });
+                });
+
+                // Prepare datasets
+                const datasets = [];
+
+                for (const kpi of selectedKpis) {
+                    for (const element of selectedElements) {
+                        const elementData = window.apiData.values.find(d => d.element === element);
+                        if (elementData && elementData.data) {
+                            const dataPoints = [];
+
+                            for (const [time, values] of Object.entries(elementData.data)) {
+                                if (values[kpi] !== undefined) {
+                                    const date = new Date(time);
+                                    dataPoints.push({
+                                        x: date,
+                                        y: values[kpi]
+                                    });
+                                }
+                            }
+
+                            // Sort by date
+                            dataPoints.sort((a, b) => a.x - b.x);
+
+                            // Create dataset
+                            datasets.push({
+                                label: `${element} - ${kpi}`,
+                                data: dataPoints,
+                                borderColor: kpiColors[`${element} - ${kpi}`] || 'rgba(100, 100, 100, 0.7)',
+                                backgroundColor: (kpiColors[`${element} - ${kpi}`] || 'rgba(100, 100, 100, 0.7)').replace('0.7', '0.1'),
+                                tension: 0.2,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            });
+                        }
+                    }
+                }
+
+                // Update chart
+                timeSeriesChartInstance.data.datasets = datasets;
+                timeSeriesChartInstance.update();
+
+                // Update custom legend
+                updateLegend(selectedKpis, selectedElements, kpiColors);
+            }
+
+            // Update custom legend
+            function updateLegend(selectedKpis, selectedElements, kpiColors) {
+                const legendContainer = $('#chart-legend');
+                legendContainer.empty();
+
+                for (const kpi of selectedKpis) {
+                    for (const element of selectedElements) {
+                        const legendItem = $('<div class="legend-item"></div>');
+
+                        // Create color box
+                        const colorBox = $('<div class="legend-color"></div>');
+                        colorBox.css({
+                            'background-color': kpiColors[`${element} - ${kpi}`] || 'rgba(100, 100, 100, 0.7)'
+                        });
+
+                        // Create label
+                        const kpiLabel = kpi.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        const label = $(`<span>${element} - ${kpiLabel}</span>`);
+
+                        // Add to legend
+                        legendItem.append(colorBox).append(label);
+                        legendContainer.append(legendItem);
+                    }
+                }
+            }
+            console.log(activeDropdownType)
+            // Close dropdown when clicking outside
+            $(document).on('click', function(e) {
+                // Only close if the click is outside of any dropdown container
+                let isDropdownClick = false;
+                types.forEach(type => {
+                    if ($(e.target).closest(`#${type}-dropdown-container`).length ||
+                        $(e.target).closest(`#${type}-dropdown-list`).length) {
+                        isDropdownClick = true;
+                        activeDropdownType = type
+                    }
+                });
+                console.log(activeDropdownType)
+                if (!isDropdownClick) {
+                    types.forEach(type => {
+                        $(`#${type}-dropdown-list`).slideUp();
+                    if (activeDropdownType === type) {
+                        typeApiCall(type);
+                        activeDropdownType = null;
+                    }
+                    });
+                }
+            });
+
+            // Prevent dropdown from closing when clicking inside it
+            $('.dropdown-list').on('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // fetch data clicked
+            $('#fetch-btn').on('click', function() {
+                fetchKpiFromAPI('chart');
+            });
+
+            // export data clicked
+            $('#export-btn').on('click', function() {
+                fetchKpiFromAPI('csv');
+            });
+
+            // Initialize chart
+            initChart();
+
+            // Initial validation and API calls for all types
+            validateDates();
+            types.forEach(type => {
+                fetchFromAPI(type);
+            });
+        });
+    </script>
+</body>
+</html>

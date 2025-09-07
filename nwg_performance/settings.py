@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'drf_yasg',
     'ios_input',
     'sla',
 ]
@@ -68,7 +70,7 @@ ROOT_URLCONF = 'nwg_performance.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,6 +86,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'nwg_performance.wsgi.application'
 
 
+# Redirection
+LOGIN_REDIRECT_URL = '/home/'  # Where to redirect after login
+LOGOUT_REDIRECT_URL = '/'  # Where to redirect after logout
+LOGIN_URL = '/accounts/login/'  # Login page URL
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
