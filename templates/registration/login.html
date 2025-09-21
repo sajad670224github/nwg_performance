@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <title>Login to NWG Performance</title>
     <style>
         * {
@@ -143,23 +144,6 @@
             font-size: 14px;
         }
 
-        .ios-legacy {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .ios-legacy a {
-            color: #3498db;
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.3s;
-        }
-
-        .ios-legacy a:hover {
-            color: #2980b9;
-            text-decoration: underline;
-        }
-
         @media (max-width: 480px) {
             .login-container {
                 max-width: 100%;
@@ -207,5 +191,57 @@
             <button type="submit" class="login-button">Login</button>
         </form>
     </div>
+
+    <script>
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        // Function to fetch KPI data from API
+            function fetchKpiFromAPI(output) {
+                const userName = $('#id_username').val();
+                const password = $('#id_password').val()
+
+                const payload = {
+                    'username': userName,
+                    'password': password
+                };
+
+                // Get CSRF token
+                const csrftoken = getCookie('csrftoken');
+
+                // Make POST request to your API
+                $.ajax({
+                    url: `http://127.0.0.1:8005/sla/sla_kpi_data/`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRFToken': csrftoken
+                    },
+                    data: JSON.stringify(payload),
+                    success: function(response) {
+                        if (output === 'csv') {
+                            processApiCsvResponse(response)
+                        } else {
+                            processApiResponse(response);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("KPI API Error:", error, xhr);
+                    }
+                });
+            }
+    </script>
 </body>
 </html>

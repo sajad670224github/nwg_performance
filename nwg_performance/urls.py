@@ -1,8 +1,7 @@
-
+from django.contrib.auth import views as auth_views
 from django.contrib import admin
-from django.urls import path, include, include
 from django.views.generic.base import TemplateView
-from .views import CustomLoginView, HomeView, SlaKpiView
+from nwg_performance.views import CustomLoginView, HomeView, SlaKpiView, logout_request, IntraServiceLoginView
 from django.urls import path, include, re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -27,6 +26,8 @@ urlpatterns = [
     path('home/', HomeView.as_view()),
     path('sla_analytics/', SlaKpiView.as_view()),
     path('accounts/login/', CustomLoginView.as_view(), name='login'),
+    path('accounts/logout/', logout_request, name='logout'),
+    path('intra_service_login/', IntraServiceLoginView.as_view(), name='intra_login'),
     path('accounts/', include('django.contrib.auth.urls')),  # Auth URLs
 #    path('', TemplateView.as_view(template_name='home.html'), name='home'),
     ### swagger

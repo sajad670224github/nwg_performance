@@ -23,6 +23,24 @@
             padding: 20px;
         }
 
+        .logout-form {
+            margin-top: 2px;
+            margin-bottom: 100px;
+        }
+        .logout-button {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            float:right;
+            margin-left: 60px;
+        }
+        .logout-button:hover {
+            background-color: #c9302c;
+        }
+
         .container {
             display: flex;
             height: 90vh;
@@ -464,6 +482,10 @@
         </div>
 
         <div class="selection-panel">
+            <form class="logout-form" action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="logout-button">Logout</button>
+            </form>
             <div class="section-title">Select KPIs</div>
             <div class="selector-group" id="kpi-selector">
                 <div class="checkbox-item">
@@ -637,7 +659,7 @@
 
                 // Make POST request to your API
                 $.ajax({
-                    url: `http://localhost:8005/sla/sla_params/${type}/`,
+                    url: `http://10.225.32.127:8005/sla/sla_params/${type}/`,
                     type: 'POST',
                     contentType: 'application/json',
                     headers: {
@@ -688,7 +710,7 @@
 
                 // Make POST request to your API
                 $.ajax({
-                    url: `http://localhost:8005/sla/sla_kpi_data/`,
+                    url: `http://10.225.32.127:8005/sla/sla_kpi_data/`,
                     type: 'POST',
                     contentType: 'application/json',
                     headers: {

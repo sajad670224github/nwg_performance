@@ -81,7 +81,7 @@ def daily_hi_calculation(dt, report):
     cols_melt = ['time', 'element', 'region']
     df_kpi = df_kpi.melt(id_vars=cols_melt)
     fdf = df_kpi.merge(df_targets[['region', 'name', 'weight']+HI_COL_NAMES], left_on=['region', 'variable'], right_on=['region', 'name'], how='left')
-    ### Thsi part is added due to local issue and can be removed on server
+    ### This part is added due to local issue and can be removed on server
     fdf1 = fdf.copy()
     fdf = pd.DataFrame()
     steps = 100000
@@ -103,7 +103,9 @@ def daily_hi_calculation(dt, report):
     fdf["normalized_index"] = fdf["normalized_index"].map(lambda x: x if pd.isna(x) else min(x, 100))
     fdf["weighted_index"] = fdf["weight"] * fdf["normalized_index"] / 100
     fdf["corr_weight"] = fdf["normalized_index"] * fdf["weight"] / fdf["normalized_index"]
-    fdf["corr_weight"] = fdf.apply(lambda x: x['weight'] if x['normalized_index']==0 else x["corr_weight"], axis=1)
+    mask = fdf['normalized_index'] == 0
+    fdf.loc[mask, 'corr_weight'] = fdf.loc[mask, 'weight']
+    #fdf["corr_weight"] = fdf.apply(lambda x: x['weight'] if x['normalized_index']==0 else x["corr_weight"], axis=1)
     fdf = fdf[["element", "variable", "weighted_index", "weight", "corr_weight"]]
     fdf = fdf.groupby(["element"]).sum(["weighted_index", "corr_weight", "weight"])
     # remove effect of NaN KPIs

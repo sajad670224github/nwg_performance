@@ -64,6 +64,7 @@ def sla_kpi_task(start_time, iterations, layer=['all'], techs=["GSM", "UMTS", "L
             pm_reports = SlaPmModels.objects.all()
         for report in pm_reports:
             for type_ in ['kpi', 'hi', 'score']:
+                print(f"{'*'*100}\ncalculating {report.layer}: {report.technology}: {type_}")
                 calculations(dt, report, type_, force_calculation)
 
         if need_calculation(dt, "", 'fscore', False):

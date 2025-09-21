@@ -13,7 +13,7 @@ from rest_framework import (
     generics
 )
 
-
+from django.views import View
 from sla.utils import get_clickhouse_column_information, get_clickhouse_kpi_information, get_user_elements, get_sla_kpi, serializing_chart_output
 from sla.serializers import SlaParameterSerializer, SlaKpiSerializer, SlaElementSerializer, SlaKpiDataSerializer
 

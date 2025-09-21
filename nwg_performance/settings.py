@@ -14,8 +14,35 @@ from pathlib import Path
 import os
 import environ
 env = environ.Env()
-environ.Env.read_env("variable.env")
+env.read_env(env_file="variable.env")
 
+# redis configuration
+REDIS_HOST=env('REDIS_HOST')
+REDIS_PORT=env('REDIS_PORT')
+REDIS_DB=env('REDIS_DB')
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+# Store session data in Redis cache
+SESSION_ENGINE      = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+# ensure the browser sends the same cookie to both ports
+SESSION_COOKIE_DOMAIN = '127.0.0.1'
+SESSION_COOKIE_NAME   = 'sessionid'
+
+
+
+AUTH_LDAP_SERVER_URI=env('AUTH_LDAP_SERVER_URI')
+AUTH_LDAP_USERNAME=env('AUTH_LDAP_USERNAME')
+AUTH_LDAP_BIND_PASSWORD=env('AUTH_LDAP_BIND_PASSWORD')
 
 UAT_CONFIG = {
     'username': env('UAT_USERNAME'),
@@ -38,7 +65,7 @@ DEBUG = True
 
 #ALLOWED_HOSTS = ['ios.nwg_performance.ir', 'www.ios.nwg_performance.ir', '10.133.49.102']
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['10.225.32.127', '10.255.32.127', 'localhost', '127.0.0.1', 'nwg_backed', '127.0.0.1',]
 
 # Application definition
 
@@ -50,10 +77,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
+    'oauth2_provider',
     'drf_yasg',
     'ios_input',
     'sla',
 ]
+
+
+#AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -88,7 +120,7 @@ WSGI_APPLICATION = 'nwg_performance.wsgi.application'
 
 # Redirection
 LOGIN_REDIRECT_URL = '/home/'  # Where to redirect after login
-LOGOUT_REDIRECT_URL = '/'  # Where to redirect after logout
+LOGOUT_REDIRECT_URL = '/accounts/login/'  # Where to redirect after logout
 LOGIN_URL = '/accounts/login/'  # Login page URL
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
