@@ -53,7 +53,7 @@ def calculate_score(dt, report, level):
     network = [f"'{i}'" for i in report.network.split(',')]
     ch = ClickhouseApi("")
     if "_" in level:
-      df_data = user_load_index(dt, report, level, network)
+        df_data = user_load_index(dt, report, level, network)
     else:
         df_data = ch.client.query_dataframe(
             f"""select time, element, JSONExtractFloat(data, 'weighted_index') as index from mt_sla 

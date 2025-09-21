@@ -12,3 +12,7 @@ clickhouse-driver
 lz4
 clickhouse-cityhash
 drf_yasg
+django-auth-ldap
+python-ldap
+redis
+django-redis

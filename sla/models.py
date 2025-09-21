@@ -32,8 +32,8 @@ class SlaPmModels(models.Model):
 class Target(models.Model):
     id = models.AutoField(primary_key=True)
     level = models.CharField(max_length=50)
-    year = models.IntegerField(max_length=4, default=2023)
-    quarter = models.IntegerField(max_length=1, default=1)
+    year = models.IntegerField(default=2023)
+    quarter = models.IntegerField(default=1)
     technology = models.CharField(max_length=50)
     kpi = models.CharField(max_length=50)
     region = models.CharField(max_length=50)
@@ -54,8 +54,8 @@ class Target(models.Model):
 
 class Baseline(models.Model):
     id = models.AutoField(primary_key=True)
-    year = models.IntegerField(max_length=4, default=2023)
-    quarter = models.IntegerField(max_length=1, default=1)
+    year = models.IntegerField(default=2023)
+    quarter = models.IntegerField(default=1)
     level = models.CharField(max_length=50)
     technology = models.CharField(max_length=10)
     element = models.CharField(max_length=32)
@@ -83,12 +83,12 @@ class TirInformation(models.Model):
 
 class ULImprovementLevel(models.Model):
     id = models.AutoField(primary_key=True)
-    year = models.IntegerField(max_length=4, default=2023)
+    year = models.IntegerField(default=2023)
     quarter =  models.IntegerField(default=1)
     technology =  models.CharField(max_length=10)
     level =  models.CharField(max_length=10, help_text="it is a choice from li(load index) and ui(user index)")
     kpi =  models.CharField(max_length=10)
-    step = models.IntegerField(max_length=2)
+    step = models.IntegerField()
     # generic
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)

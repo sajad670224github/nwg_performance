@@ -1,4 +1,4 @@
-#version: '3.8'
+version: '3.8'
 
 services:
   clickhouse:
@@ -27,9 +27,10 @@ services:
       retries: 10
     networks:
       - nwg
+      - common
 
-  postgres:
-    container_name: postgres
+  nwg_postgres:
+    container_name: nwg_postgres
     image: postgres:13
     environment:
       POSTGRES_DB: nwg_performance
@@ -37,8 +38,8 @@ services:
       POSTGRES_PASSWORD: 4rfvBGT_
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./nwg_postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5435:5432"
     healthcheck:
@@ -46,40 +47,45 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 2G
     networks:
       - nwg
-  backend:
-    container_name: backend
+      - common
+
+  nwg-backend:
+    container_name: nwg-backend
     build:
       context: .
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:8005
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8005"
     volumes:
       - .:/app
     ports:
       - "8005:8005"
     environment:
-      DATABASE_URL: postgres://nwg_performance:4rfvBGT_@postgres:5432/nwg_performance
+      POSTGRES_DB: nwg_performance
+      POSTGRES_USER: nwg_performance
+      POSTGRES_PASSWORD: 4rfvBGT_
+      POSTGRES_HOST: nwg_postgres
       CLICKHOUSE_URL: http://clickhouse:8123
     depends_on:
       clickhouse:
         condition: service_healthy
-      postgres:
+      nwg_postgres:
         condition: service_healthy
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 1G
     networks:
       - nwg
+      - common
+
 volumes:
-  postgres_data:
+  nwg_postgres_data:
   clickhouse_data:
 
 networks:
   nwg:
+    driver: bridge
+  common:
+    external: true
+    name: nwg-network
